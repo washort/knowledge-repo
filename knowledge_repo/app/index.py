@@ -14,7 +14,7 @@ def update_index():
     """
     kr_dir = {kp.path: kp for kp in current_repo.posts()}
     kr_uuids = {kp.uuid: kp for kp in kr_dir.values()}
-    posts = db_session.query(Post).all()
+    posts = Post.query.all()
 
     for post in posts:
 
