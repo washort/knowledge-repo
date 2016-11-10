@@ -123,12 +123,20 @@ def save_post():
     data = request.get_json()
     path = data['path']
 
+    prefixes = current_app.config.get('WEB_EDITOR_PREFIXES', None)
+    if prefixes:
+        if not any([path.startswith(prefix) for prefix in prefixes]):
+            return json.dumps({'msg': ("Your post path must begin with one of {}").format(prefixes),
+                               'success': False})
+
     # TODO better handling of overwriting
     kp = None
     if path in current_repo:
         kp = current_repo.post(path)
         if g.user.username not in kp.headers['authors']:
-            return json.dumps({'msg': "Post with path already exists!".format(path), 'success': False})
+            return json.dumps({'msg': ("Post with path {} already exists and you are not an author!",
+                                       "\nPlease try a different path").format(path),
+                               'success': False})
 
     # create the knowledge post
     kp = kp or KnowledgePost(path=path)
