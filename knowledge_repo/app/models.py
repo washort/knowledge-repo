@@ -310,7 +310,7 @@ class Post(db.Model):
     _authors = association_proxy('_authors_assoc', 'author',
                                  creator=lambda author: PostAuthorAssoc(author=author),)
 
-    @property
+    @hybrid_property
     def authors(self):
         return self._authors
 
@@ -455,6 +455,15 @@ class Post(db.Model):
                 .where(PageView.object_id == self.id)
                 .where(PageView.object_type == 'post')
                 .label("view_user_count"))
+
+    @hybrid_property
+    def contains_author(self, author_name):
+        return True
+
+    @contains_author.expression
+    def contains_author(self, author_name):
+        user = select(User).where(username=author_name)
+        return func.IF(user in self.authors, True, False)
 
     _votes = db.relationship("Vote", lazy='dynamic',
                              primaryjoin="and_(foreign(Vote.object_id)==Post.id, "
