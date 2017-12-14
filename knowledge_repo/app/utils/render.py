@@ -1,5 +1,6 @@
 import sys
 
+import bleach
 import markdown
 from flask import url_for
 from knowledge_repo.post import KnowledgePost
@@ -89,4 +90,5 @@ def render_post(post):
 
 
 def render_comment(comment):
-    return markdown.Markdown().convert(comment.text)
+    return bleach.clean(markdown.Markdown().convert(comment.text),
+                        tags=bleach.sanitizer.ALLOWED_TAGS + ['p'])

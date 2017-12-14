@@ -108,6 +108,28 @@ class CommentTest(unittest.TestCase):
                                         .all())
             assert not delete_comment, 'comments found after deletion'
 
+    def test_comments_are_sanitized(self):
+        """
+        Comments are properly bleached
+        """
+        with self.repo_app.app_context():
+            post = (db_session.query(Post)
+                              .filter(Post.is_published)
+                              .first())
+            # test commenting on a post
+            data = {'text': '[test](javascript:alert(1))'}
+            rv = self.app.post('/comment?path={}'.format(post.path),
+                               headers=self.headers,
+                               data=json.dumps(data),
+                               content_type='application/json')
+
+            # check that the number of comments rendered increased by 1
+            rv = self.app.get('/post/' + post.path,
+                              headers=self.headers)
+            soup = BeautifulSoup(rv.data.decode('utf-8'), 'html.parser')
+            comments = soup.findAll("div", {"class": "panel"})
+            commentText = comments[1].find("p", {"style": ""}).find("p").text
+            assert commentText == 'test', "comment text is " + repr(commentText)
 
 if __name__ == '__main__':
     unittest.main()
